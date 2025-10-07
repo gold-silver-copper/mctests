@@ -8,7 +8,7 @@ use std::f32::consts::*;
 fn main() {
     App::new()
         .insert_resource(DirectionalLightShadowMap { size: 4096 })
-        .add_plugins(DefaultPlugins)
+        .add_plugins(DefaultPlugins.set(ImagePlugin::default_nearest()))
         .add_systems(Startup, setup)
         .add_systems(Update, (animate_light_direction, apply_minecraft_skin))
         .run();
@@ -20,7 +20,8 @@ struct MinecraftModel;
 fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     commands.spawn((
         Camera3d::default(),
-        Transform::from_xyz(0.7, 0.7, -5.0).looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
+        Msaa::Off,
+        Transform::from_xyz(0.7, 3.0, -2.0).looking_at(Vec3::new(0.0, 0.3, 0.0), Vec3::Y),
         EnvironmentMapLight {
             diffuse_map: asset_server.load("environment_maps/pisa_diffuse_rgb9e5_zstd.ktx2"),
             specular_map: asset_server.load("environment_maps/pisa_specular_rgb9e5_zstd.ktx2"),
@@ -43,7 +44,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 
     commands.spawn((
-        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/model2.gltf"))),
+        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/splitik6.gltf"))),
         MinecraftModel,
     ));
 }
@@ -57,24 +58,24 @@ fn apply_minecraft_skin(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     for (entity, _) in &model_query {
-        // Create the material once and share the handle
+        // Load the texture
+        let texture_handle: Handle<Image> = asset_server.load("models/splitik.png");
+
+        // Create the material with the texture
         let material = materials.add(StandardMaterial {
-            base_color_texture: Some(asset_server.load("models/alex.png")),
-            alpha_mode: AlphaMode::Mask(0.5),
-            unlit: false,
+            base_color_texture: Some(texture_handle),
+
             ..default()
         });
 
-        // Apply the same material handle to all mesh entities
         traverse_and_apply_skin(
             entity,
             &children_query,
             &mesh_query,
             &mut commands,
-            material.clone(), // Clone the handle, not the material data
+            material.clone(),
         );
 
-        // Remove marker so we only apply once
         commands.entity(entity).remove::<MinecraftModel>();
     }
 }
