@@ -5,7 +5,7 @@ use bevy::{
     platform::collections::HashSet,
     prelude::*,
 };
-
+const MODEL_PATH: &str = "models/splitik6.gltf";
 fn main() {
     App::new()
         .insert_resource(DirectionalLightShadowMap { size: 4096 })
@@ -49,7 +49,7 @@ fn setup(mut commands: Commands, asset_server: Res<AssetServer>) {
     ));
 
     commands.spawn((
-        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset("models/splitik6.gltf"))),
+        SceneRoot(asset_server.load(GltfAssetLabel::Scene(0).from_asset(MODEL_PATH))),
         MinecraftModel,
     ));
 }
